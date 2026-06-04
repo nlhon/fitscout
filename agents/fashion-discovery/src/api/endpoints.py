@@ -29,25 +29,18 @@ async def fashion_discovery(
     """
     Main A2A Protocol endpoint for fashion retailer discovery
     
+    This is the primary endpoint that orchestrators call to discover fashion retailers.
+    It implements a multi-stage fallback strategy:
+    1. Query local registry with filters
+    2. If insufficient results, use Tavily to search web
+    3. Optionally call matching retailers' agents for real-time data
+    
     Args:
         request: FashionDiscoveryRequest with query and filters
         x_agent_id: Optional agent ID from header (for tracing)
     
     Returns:
         FashionDiscoveryResponse with matching retailers
-    
-    Example Request:
-        {
-            "agent_id": "orchestrator-123",
-            "request_id": "req-456",
-            "query": "luxury puffer jackets under $5000",
-            "filters": {
-                "max_price": 5000,
-                "categories": ["outerwear", "jackets"],
-                "quality_tiers": ["luxury", "premium"]
-            },
-            "x402_budget": 0.05
-        }
     """
     start_time = time.time()
     
@@ -63,30 +56,70 @@ async def fashion_discovery(
         quality_tiers = filters.quality_tiers if filters else ["luxury", "premium"]
         categories = filters.categories if filters else []
         
-        # Search registry
+        # Stage 1: Search registry
+        log.debug(f"Stage 1: Searching registry with categories={categories}, tiers={quality_tiers}")
         matches_data = await registry_service.search(
             categories=categories if categories else None,
             quality_tiers=quality_tiers if quality_tiers else None,
             max_price=filters.max_price if filters else None
         )
         
+        # Stage 2: If insufficient results, use Tavily fallback
+        if len(matches_data) < 3:
+            log.info(f"Registry returned {len(matches_data)} results, using Tavily fallback...")
+            
+            try:
+                from src.services.tavily_search import tavily_service
+                tavily_results = await tavily_service.search_retailers(
+                    query=request.query,
+                    categories=categories if categories else None
+                )
+                
+                if tavily_results:
+                    # Validate and add verified retailers to registry
+                    for result in tavily_results[:5]:  # Limit to top 5
+                        try:
+                            # Verify URL is not blacklisted
+                            if await registry_service.validate_retailer_url(result.get("website_url", "")):
+                                log.debug(f"Adding Tavily result to registry: {result['name']}")
+                                # Only add if not already in registry
+                                existing = await registry_service.search_by_name(result['name'])
+                                if not existing:
+                                    result_copy = result.copy()
+                                    result_copy["quality_tier"] = "premium"
+                                    result_copy["is_verified"] = False  # Mark as unverified from Tavily
+                                    # Don't add to DB here, just include in results
+                                    matches_data.append(result_copy)
+                        except Exception as e:
+                            log.warning(f"Could not process Tavily result: {str(e)}")
+                            continue
+                            
+            except Exception as e:
+                log.warning(f"Tavily fallback search failed: {str(e)}")
+        
         # Convert to RetailerMatch objects
         matches = []
-        for retailer in matches_data:
+        for retailer in matches_data[:10]:  # Limit to top 10 results
             match = RetailerMatch(
-                retailer_id=retailer["retailer_id"],
-                retailer_name=retailer["name"],
-                website_url=retailer["website_url"],
-                agent_endpoint=retailer["agent_endpoint"],
+                retailer_id=retailer.get("retailer_id", f"retailer-{len(matches)}"),
+                retailer_name=retailer.get("name", retailer.get("title", "Unknown")),
+                website_url=retailer.get("website_url", retailer.get("source_url", "")),
+                agent_endpoint=retailer.get("agent_endpoint", ""),
                 category=",".join(retailer.get("categories", [])),
-                confidence_score=retailer.get("verification_score", 0.85),
-                x402_endpoint=f"{retailer['website_url']}/payments" if retailer.get("x402_payment_address") else None
+                confidence_score=retailer.get("confidence_score", retailer.get("verification_score", 0.75)),
+                x402_endpoint=f"{retailer.get('website_url', '')}/payments" if retailer.get("x402_payment_address") else None
             )
             matches.append(match)
         
         # Calculate response time
         response_time_ms = (time.time() - start_time) * 1000
         query_cost = 0.001  # Base cost per query
+        
+        # Adjust cost based on result count and Tavily usage
+        if len(matches_data) >= 5:
+            query_cost = 0.0005  # Discount for good registry hit
+        else:
+            query_cost = 0.002  # Higher cost for Tavily fallback
         
         response = FashionDiscoveryResponse(
             request_id=request.request_id,
@@ -119,7 +152,7 @@ async def fashion_discovery(
             detail=f"Invalid request: {str(e)}"
         )
     except Exception as e:
-        log.error(f"Error processing discovery request: {str(e)}")
+        log.error(f"Error processing discovery request: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Error processing discovery request: {str(e)}"
