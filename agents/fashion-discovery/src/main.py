@@ -22,11 +22,30 @@ async def lifespan(app: FastAPI):
     """Application lifespan context manager"""
     # Startup
     log.info("Starting Fashion Discovery Sub-Agent...")
-    # Initialize services here (database, cache, etc.)
+    
+    # Initialize database
+    from src.database import db
+    from src.database.seed import seed_database
+    db.initialize()
+    
+    # Seed database if needed
+    stats = {}
+    try:
+        from src.services.registry import registry_service
+        stats = await registry_service.get_stats()
+        if stats["total_retailers"] == 0:
+            log.info("Registry empty, seeding with sample data...")
+            seed_database()
+    except Exception as e:
+        log.warning(f"Could not check registry: {str(e)}")
+    
     yield
     # Shutdown
     log.info("Shutting down Fashion Discovery Sub-Agent...")
-    # Cleanup here
+    try:
+        db.close()
+    except Exception as e:
+        log.warning(f"Error closing database: {str(e)}")
 
 # Create FastAPI application
 app = FastAPI(
