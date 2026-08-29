@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#0b0b0d" />
+    <meta
+      name="description"
+      content="Light Room — draw glowing trails that hang in three-dimensional space."
+    />
+    <title>Light Room · 3D doodle</title>
+  </head>
+  <body class="doodle-body">
+    <canvas id="stage" aria-label="Drawing surface. Drag to draw glowing trails in 3D space."></canvas>
+
+    <noscript>
+      <p class="fallback">The Light Room needs JavaScript and WebGL to run.</p>
+    </noscript>
+
+    <div class="hud" id="hud" hidden>
+      <header class="hud-corner hud-topleft">
+        <p class="mark">Light Room</p>
+        <p class="mark-sub">Draw with light. It stays in the room.</p>
+      </header>
+
+      <div class="hud-corner hud-topright">
+        <div class="readout">
+          <span class="readout-label">Depth</span>
+          <div class="meter" role="img" aria-label="Drawing depth" id="depth-meter">
+            <span class="meter-fill" id="depth-fill"></span>
+          </div>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Marks</span>
+          <span class="readout-value" id="stroke-count">0</span>
+        </div>
+      </div>
+
+      <div class="hud-corner hud-bottomleft">
+        <fieldset class="rail">
+          <legend>Light</legend>
+          <div class="swatches" id="swatches"></div>
+        </fieldset>
+        <fieldset class="rail">
+          <legend>Weight</legend>
+          <div class="weights" id="weights"></div>
+        </fieldset>
+      </div>
+
+      <div class="hud-corner hud-bottomright">
+        <button type="button" class="plate plate-ghost" id="undo">
+          <span class="plate-label">Undo</span>
+        </button>
+        <button type="button" class="plate plate-ghost" id="recenter">
+          <span class="plate-label">Recenter</span>
+        </button>
+        <button type="button" class="plate plate-ghost" id="save">
+          <span class="plate-label">Save</span>
+        </button>
+        <button type="button" class="plate plate-primary" id="clear">
+          <span class="plate-label">Clear</span>
+          <span class="plate-braille" aria-hidden="true">&#10249;&#10247;&#10257;&#10241;&#10263;</span>
+        </button>
+      </div>
+
+      <p class="hint" id="hint">
+        <span>Drag to draw</span>
+        <span>Two fingers or right-drag to orbit</span>
+        <span>Scroll to set depth</span>
+      </p>
+    </div>
+
+    <p class="fallback" id="fallback" hidden>
+      This browser could not start WebGL, so the Light Room cannot open.
+    </p>
+
+    <script type="module" src="/src/doodle/main.js"></script>
+  </body>
+</html>
