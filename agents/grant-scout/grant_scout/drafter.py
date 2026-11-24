@@ -22,6 +22,8 @@ SYSTEM = """You draft grant applications for a fashion designer, in their own fi
 Rules:
 - Use only facts present in the applicant profile. Never invent awards, press, revenue, \
 stockists, collaborators, dates, numbers or biography.
+- Press items labelled [self-reported] are not confirmed. Do not cite them as press \
+coverage. Add "confirm press: <item>" to missing_information instead.
 - Where an answer needs a fact the profile lacks, write [NEEDS INPUT: what is needed] in \
 the answer and list it under missing_information.
 - Answer every published application question. If none are published, draft the usual \
