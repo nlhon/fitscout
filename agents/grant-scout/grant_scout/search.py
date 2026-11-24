@@ -16,19 +16,21 @@ MODEL = "claude-opus-5-5"
 BETAS = ["server-side-fallback-2026-07-01"]
 MAX_CONTINUATIONS = 5
 
-RESEARCH_PROMPT = """Today is {today}. Find fashion grants, fellowships, prizes and funds \
+RESEARCH_PROMPT = """Today is {today}. Find fashion grants, fellowships, artist residencies, incubators, prizes and funds \
 that are currently accepting applications, i.e. whose next deadline is on or after {today}, \
 or that accept applications on a rolling basis.
 
 Cover fashion design, apparel, textiles, accessories, sustainable fashion, and grants for \
-emerging or independent designers and small fashion businesses.{extra}
+emerging or independent designers and small fashion businesses. Include artist fellowships \
+and residencies that accept designers, textile artists or interdisciplinary/art-and-technology \
+practitioners, even if they are not fashion-only.{extra}
 
 For every grant, open its official page and record:
 - name and organization
 - official URL
 - the exact next deadline (date), or that it is rolling
 - award amount
-- eligibility (location, citizenship, career stage, business size)
+- eligibility (location, citizenship, age limits, years in business, career stage, business size)
 - what it funds
 - the application questions or required sections, as published
 - required materials (portfolio, budget, CV, etc.)
