@@ -16,6 +16,12 @@ grant's official site.
 4. **Draft**: for each open grant, Claude answers the application questions in the
    applicant's voice using **only** facts from the profile, and marks anything missing.
 
+## Budgets
+
+Set `stage` in the profile (`concept`, `sampling`, `launch` or `growth`). Each draft's budget
+starts from a stage-based split scaled to that grant's award, then is adapted to the grant's
+rules. See [docs/budget_rationale.md](docs/budget_rationale.md) for the research behind it.
+
 ## Setup
 
 ```bash

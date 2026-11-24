@@ -13,6 +13,7 @@ from typing import Any, Dict
 import anthropic
 import yaml
 
+from .budget import parse_amount, plan_budget, render_plan
 from .models import ApplicationDraft, Grant
 from .search import BETAS, MODEL, _check
 
@@ -27,12 +28,31 @@ the answer and list it under missing_information.
 sections: artist/designer statement, project description, how the funds will be used, \
 budget outline, impact, and timeline.
 - Respect any word or character limits stated in the question.
-- Be specific and concrete, tie the work to the grant's stated focus, and avoid filler."""
+- Be specific and concrete, tie the work to the grant's stated focus, and avoid filler.
+
+Budget:
+- Start from the recommended budget provided. It is split for the brand's current stage.
+- Adapt it to this grant: drop or move lines the grant does not allow (payroll, equipment, \
+travel), and give more weight to what the grant funds (e.g. sustainability, innovation, production).
+- Write each line as a named, quantified item tied to a milestone or outcome \
+(e.g. "$4,000: made-to-order production of 3 runway looks for the spring drop").
+- Totals must equal the amount requested, and the request must not exceed the award.
+- Label figures as estimates to confirm with vendor quotes. Never present them as quotes."""
 
 
 def load_profile(path: Path) -> Dict[str, Any]:
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def budget_guidance(grant: Grant, profile: Dict[str, Any]) -> str:
+    stage = profile.get("stage") or "growth"
+    amount = parse_amount(grant.award_amount)
+    if not amount:
+        return (f"Brand stage: {stage}. The award amount is unknown, so propose a budget as "
+                "percentages and flag the amount as [NEEDS INPUT].")
+    return (f"Brand stage: {stage}. Recommended split of ${amount:,}:\n"
+            + render_plan(plan_budget(stage, amount)))
 
 
 def draft_application(client: anthropic.Anthropic, grant: Grant, profile: Dict[str, Any]) -> ApplicationDraft:
@@ -41,7 +61,9 @@ def draft_application(client: anthropic.Anthropic, grant: Grant, profile: Dict[s
         + yaml.safe_dump(profile, sort_keys=False, allow_unicode=True)
         + "</applicant_profile>\n\n<grant>\n"
         + grant.model_dump_json(indent=2)
-        + "\n</grant>\n\nDraft this application."
+        + "\n</grant>\n\n<recommended_budget>\n"
+        + budget_guidance(grant, profile)
+        + "\n</recommended_budget>\n\nDraft this application."
     )
     response = client.beta.messages.parse(
         model=MODEL,

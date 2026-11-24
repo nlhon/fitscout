@@ -4,6 +4,7 @@
 
 name: Nova Lorraine
 brand_name: ""            # e.g. the label name, if different
+stage: ""                 # concept | sampling | launch | growth. Sets how the budget is split
 location:
   city: ""
   country: ""
@@ -26,8 +27,8 @@ past_awards_and_press: []
 current_project:
   title: ""
   description: ""
-  funding_needed: ""
-  budget_breakdown: []    # - "Fabric sourcing: $X"
+  funding_needed: ""      # blank = scale each draft to that grant's award
+  budget_breakdown: []    # empty = use the stage-based plan in grant_scout/budget.py
   timeline: ""
   intended_impact: ""
 artist_statement: ""      # a paragraph in Nova's own words, if available
