@@ -1,0 +1,6 @@
+# Personal applicant data and generated drafts stay local
+profiles/*.yaml
+!profiles/*.example.yaml
+output/
+__pycache__/
+.env

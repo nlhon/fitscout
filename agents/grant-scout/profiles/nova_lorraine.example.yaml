@@ -1,0 +1,34 @@
+# Copy to profiles/nova_lorraine.yaml and replace every placeholder with real details.
+# The drafter only uses what is written here; anything left blank becomes [NEEDS INPUT].
+# profiles/*.yaml (other than *.example.yaml) is git-ignored so personal data stays local.
+
+name: Nova Lorraine
+brand_name: ""            # e.g. the label name, if different
+location:
+  city: ""
+  country: ""
+citizenship: ""
+contact:
+  email: ""
+  website: ""
+  instagram: ""
+career_stage: ""          # e.g. emerging designer, 2 years in business
+business:
+  legal_structure: ""     # sole proprietor, LLC, ...
+  founded: ""
+  annual_revenue: ""
+  employees: ""
+education: []             # - "BFA Fashion Design, School, Year"
+experience: []            # roles, internships, collaborations
+design_focus: ""          # aesthetic, categories (womenswear, accessories...), materials
+sustainability_practices: ""
+past_awards_and_press: []
+current_project:
+  title: ""
+  description: ""
+  funding_needed: ""
+  budget_breakdown: []    # - "Fabric sourcing: $X"
+  timeline: ""
+  intended_impact: ""
+artist_statement: ""      # a paragraph in Nova's own words, if available
+portfolio_links: []
